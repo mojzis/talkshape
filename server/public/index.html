@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TalkShape</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <header id="header">
+    <h1>TalkShape</h1>
+    <div id="project-selector">
+      <label for="project-select">Project:</label>
+      <select id="project-select"></select>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- Chat pane -->
+    <section id="chat-pane">
+      <div id="messages"></div>
+      <form id="chat-form">
+        <textarea
+          id="chat-input"
+          placeholder="Describe what you want to build..."
+          rows="2"
+        ></textarea>
+        <button type="submit" id="send-btn">Send</button>
+      </form>
+    </section>
+
+    <!-- 3D Preview pane -->
+    <section id="preview-pane">
+      <div id="viewer"></div>
+      <div id="viewer-status">No model loaded</div>
+    </section>
+  </main>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
