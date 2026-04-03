@@ -3,8 +3,8 @@ import { createServer } from "http";
 import { WebSocketServer } from "ws";
 import { watch } from "chokidar";
 import { query } from "@anthropic-ai/claude-agent-sdk";
-import { readdir, stat } from "fs/promises";
-import { resolve, relative, join, extname } from "path";
+import { readdir, stat, readFile } from "fs/promises";
+import { resolve, relative, join, extname, isAbsolute } from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 
@@ -46,6 +46,110 @@ app.get("/api/projects", async (req, res) => {
       .map((e) => e.name)
       .sort();
     res.json(dirs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: health check ---
+
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", apiKeySet: !!process.env.ANTHROPIC_API_KEY });
+});
+
+// --- API: project files listing ---
+
+const FILTERED_NAMES = new Set(["__pycache__", ".pyc"]);
+
+app.get("/api/projects/:name/files", async (req, res) => {
+  const { name } = req.params;
+  if (name.includes("..") || name.includes("/")) {
+    return res.status(400).json({ error: "invalid project name" });
+  }
+
+  const projectPath = resolve(PROJECTS_DIR, name);
+  try {
+    await stat(projectPath);
+  } catch {
+    return res.status(404).json({ error: `project "${name}" not found` });
+  }
+
+  try {
+    const entries = await readdir(projectPath, { withFileTypes: true });
+    const files = [];
+    for (const entry of entries) {
+      if (entry.name.startsWith(".")) continue;
+      if (FILTERED_NAMES.has(entry.name)) continue;
+      if (entry.name.endsWith(".pyc")) continue;
+      if (entry.isDirectory()) continue; // flat listing only
+
+      const filePath = resolve(projectPath, entry.name);
+      const fileStat = await stat(filePath);
+      files.push({
+        name: entry.name,
+        type: "file",
+        size: fileStat.size,
+        modified: fileStat.mtime.toISOString(),
+      });
+    }
+    files.sort((a, b) => a.name.localeCompare(b.name));
+    res.json(files);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// --- API: project file content ---
+
+const MIME_MAP = {
+  ".py": "text/plain",
+  ".md": "text/plain",
+  ".txt": "text/plain",
+  ".json": "text/plain",
+  ".toml": "text/plain",
+  ".yaml": "text/plain",
+  ".yml": "text/plain",
+  ".png": "image/png",
+  ".svg": "image/svg+xml",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".stl": "application/octet-stream",
+  ".step": "application/octet-stream",
+  ".stp": "application/octet-stream",
+};
+
+app.get("/api/projects/:name/file", async (req, res) => {
+  const { name } = req.params;
+  const filePath = req.query.path;
+
+  if (name.includes("..") || name.includes("/")) {
+    return res.status(400).json({ error: "invalid project name" });
+  }
+  if (!filePath || filePath.includes("..") || isAbsolute(filePath) || filePath.includes("/")) {
+    return res.status(400).json({ error: "invalid file path" });
+  }
+
+  const fullPath = resolve(PROJECTS_DIR, name, filePath);
+  // Ensure resolved path is within project directory
+  const projectPath = resolve(PROJECTS_DIR, name);
+  if (!fullPath.startsWith(projectPath + "/")) {
+    return res.status(400).json({ error: "invalid file path" });
+  }
+
+  try {
+    await stat(fullPath);
+  } catch {
+    return res.status(404).json({ error: "file not found" });
+  }
+
+  const ext = extname(filePath).toLowerCase();
+  const mime = MIME_MAP[ext] || "application/octet-stream";
+  res.setHeader("Content-Type", mime);
+  res.setHeader("Cache-Control", "no-cache");
+
+  try {
+    const content = await readFile(fullPath);
+    res.send(content);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

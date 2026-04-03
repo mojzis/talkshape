@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TalkShape</title>
   <link rel="stylesheet" href="/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script type="importmap">
   {
     "imports": {
@@ -24,6 +25,15 @@
   </header>
 
   <main id="app">
+    <!-- File browser pane -->
+    <section id="file-browser">
+      <div id="file-browser-header">
+        <span>Files</span>
+        <button id="file-browser-toggle" title="Collapse file browser">&lsaquo;</button>
+      </div>
+      <div id="file-list"></div>
+    </section>
+
     <!-- Chat pane -->
     <section id="chat-pane">
       <div id="messages"></div>
@@ -37,12 +47,37 @@
       </form>
     </section>
 
-    <!-- 3D Preview pane -->
+    <!-- Preview pane (3D viewer + wireframe) -->
     <section id="preview-pane">
-      <div id="viewer"></div>
-      <div id="viewer-status">No model loaded</div>
+      <div id="viewer-container">
+        <div id="viewer"></div>
+        <div id="viewer-toolbar">
+          <button id="reset-view-btn" title="Reset camera view">Reset View</button>
+          <button id="screenshot-btn" title="Download screenshot">Screenshot</button>
+        </div>
+        <div id="viewer-status">No model loaded</div>
+      </div>
+      <div id="wireframe-preview">
+        <div id="wireframe-header">Wireframe Preview</div>
+        <div id="wireframe-content">
+          <p id="wireframe-placeholder">No preview yet — Claude will generate one after building</p>
+          <img id="wireframe-img" style="display:none" alt="Wireframe preview">
+          <div id="wireframe-timestamp" style="display:none"></div>
+        </div>
+      </div>
     </section>
   </main>
+
+  <!-- File content modal -->
+  <div id="file-modal" class="modal-overlay" style="display:none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span id="file-modal-title"></span>
+        <button id="file-modal-close">&times;</button>
+      </div>
+      <pre id="file-modal-body"></pre>
+    </div>
+  </div>
 
   <script type="module" src="/app.js"></script>
 </body>
