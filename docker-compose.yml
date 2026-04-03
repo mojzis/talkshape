@@ -1,0 +1,13 @@
+services:
+  talkshape:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./skill:/home/claude/.claude/skills/build123d:ro
+      - ./projects:/workspace/projects
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    mem_limit: 4g
+    cpus: 2
+    restart: unless-stopped

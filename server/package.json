@@ -1,0 +1,16 @@
+{
+  "name": "talkshape-server",
+  "version": "1.0.0",
+  "description": "TalkShape — conversational 3D modelling server",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "chokidar": "^4.0.0",
+    "express": "^4.21.0",
+    "ws": "^8.18.0"
+  }
+}
