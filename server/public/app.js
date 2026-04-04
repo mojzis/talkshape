@@ -10,6 +10,9 @@ let lastMessageText = "";
 let userScrolledUp = false;
 let previewTimestamp = null;
 let previewTimerInterval = null;
+let currentAbortController = null;
+let pendingImageFile = null;
+let currentSTLFilename = null;
 
 // ─── DOM refs ────────────────────────────────────────────────────────────────
 
@@ -31,6 +34,21 @@ const fileModal = document.getElementById("file-modal");
 const fileModalTitle = document.getElementById("file-modal-title");
 const fileModalBody = document.getElementById("file-modal-body");
 const fileModalClose = document.getElementById("file-modal-close");
+const newProjectBtn = document.getElementById("new-project-btn");
+const deleteProjectBtn = document.getElementById("delete-project-btn");
+const newProjectModal = document.getElementById("new-project-modal");
+const newProjectClose = document.getElementById("new-project-close");
+const newProjectName = document.getElementById("new-project-name");
+const newProjectCreate = document.getElementById("new-project-create");
+const newProjectError = document.getElementById("new-project-error");
+const sessionInfoEl = document.getElementById("session-info");
+const uploadBtn = document.getElementById("upload-btn");
+const uploadPreview = document.getElementById("upload-preview");
+const uploadThumb = document.getElementById("upload-thumb");
+const uploadRemove = document.getElementById("upload-remove");
+const imageFileInput = document.getElementById("image-file-input");
+const downloadAllBtn = document.getElementById("download-all-btn");
+const modelInfoBar = document.getElementById("model-info-bar");
 
 // ─── Markdown setup ─────────────────────────────────────────────────────────
 
@@ -41,7 +59,9 @@ if (window.marked) {
 // ─── Three.js setup ─────────────────────────────────────────────────────────
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x1a1a2e);
+const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches ||
+  !window.matchMedia("(prefers-color-scheme: light)").matches;
+scene.background = new THREE.Color(isDarkMode ? 0x1a1a2e : 0xe0e0e0);
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 10000);
 camera.position.set(80, 80, 80);
@@ -114,6 +134,10 @@ function fitCameraToModel() {
 /** Load an STL from URL, replace the current mesh, auto-fit camera. */
 function loadSTL(url) {
   viewerStatus.textContent = "Loading model...";
+  // Extract filename from URL for info bar
+  const urlPath = url.split("?")[0];
+  currentSTLFilename = urlPath.split("/").pop() || "model.stl";
+
   stlLoader.load(
     url,
     (geometry) => {
@@ -136,6 +160,15 @@ function loadSTL(url) {
       fitCameraToModel();
 
       viewerStatus.textContent = `${size.x.toFixed(1)} \u00d7 ${size.y.toFixed(1)} \u00d7 ${size.z.toFixed(1)} mm`;
+
+      // Update model info bar
+      const triCount = geometry.attributes.position
+        ? Math.floor(geometry.attributes.position.count / 3)
+        : "?";
+      modelInfoBar.textContent =
+        `${currentSTLFilename} | ${triCount.toLocaleString()} triangles | ` +
+        `${size.x.toFixed(1)} \u00d7 ${size.y.toFixed(1)} \u00d7 ${size.z.toFixed(1)} mm`;
+      modelInfoBar.style.display = "block";
     },
     undefined,
     (err) => {
@@ -293,6 +326,26 @@ async function sendMessage(text) {
   lastMessageText = text;
   userScrolledUp = false;
 
+  // If there's an image pending, upload it first and mention in prompt
+  let imageRef = "";
+  if (pendingImageFile) {
+    try {
+      const formData = new FormData();
+      formData.append("image", pendingImageFile);
+      const uploadRes = await fetch(`/api/projects/${currentProject}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+      if (uploadRes.ok) {
+        const { filename } = await uploadRes.json();
+        imageRef = `\n[Attached image: ${filename}]`;
+      }
+    } catch (err) {
+      console.error("Image upload failed:", err);
+    }
+    clearImageUpload();
+  }
+
   addMessage("user", text);
   addThinkingIndicator();
 
@@ -302,11 +355,15 @@ async function sendMessage(text) {
   let assistantText = "";
   let assistantAdded = false;
 
+  // AbortController for cancelling via Escape
+  currentAbortController = new AbortController();
+
   try {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: text, projectDir: currentProject }),
+      body: JSON.stringify({ message: text + imageRef, projectDir: currentProject }),
+      signal: currentAbortController.signal,
     });
 
     if (!res.ok) {
@@ -360,6 +417,8 @@ async function sendMessage(text) {
           if (data.cost != null) parts.push(`Cost: $${data.cost.toFixed(4)}`);
           if (data.duration != null) parts.push(`Duration: ${(data.duration / 1000).toFixed(1)}s`);
           if (parts.length) addMessage("info", parts.join(" | "));
+          // Refresh session info
+          loadSessionInfo();
         } else if (data.type === "error") {
           removeThinkingIndicator();
           addErrorMessage(`Error: ${data.message}`);
@@ -373,8 +432,13 @@ async function sendMessage(text) {
     }
   } catch (err) {
     removeThinkingIndicator();
-    addErrorMessage(`Network error: ${err.message}`);
+    if (err.name === "AbortError") {
+      addMessage("info", "Response cancelled.");
+    } else {
+      addErrorMessage(`Network error: ${err.message}`);
+    }
   } finally {
+    currentAbortController = null;
     isSending = false;
     sendBtn.disabled = false;
     chatInput.disabled = false;
@@ -413,11 +477,22 @@ chatForm.addEventListener("submit", (e) => {
   sendMessage(text);
 });
 
-// Enter to send, Shift+Enter for newline
+// Enter to send, Shift+Enter for newline, Ctrl/Cmd+Enter also sends
 chatInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
     chatForm.dispatchEvent(new Event("submit"));
+  }
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    e.preventDefault();
+    chatForm.dispatchEvent(new Event("submit"));
+  }
+});
+
+// Escape to cancel current response
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && currentAbortController) {
+    currentAbortController.abort();
   }
 });
 
@@ -475,6 +550,23 @@ async function loadFileList() {
       item.appendChild(icon);
       item.appendChild(name);
       item.appendChild(size);
+
+      // Add download button for downloadable files
+      const ext = "." + file.name.split(".").pop().toLowerCase();
+      if ([".stl", ".step", ".stp", ".py", ".png"].includes(ext)) {
+        const dlBtn = document.createElement("button");
+        dlBtn.className = "file-download-btn";
+        dlBtn.textContent = "\u2B07";
+        dlBtn.title = `Download ${file.name}`;
+        dlBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const link = document.createElement("a");
+          link.href = `/projects/${currentProject}/${file.name}`;
+          link.download = file.name;
+          link.click();
+        });
+        item.appendChild(dlBtn);
+      }
 
       item.addEventListener("click", () => handleFileClick(file.name));
       fileListEl.appendChild(item);
@@ -588,8 +680,16 @@ async function loadProjects() {
 }
 
 projectSelect.addEventListener("change", () => {
-  currentProject = projectSelect.value;
+  switchProject(projectSelect.value);
+});
+
+function switchProject(name) {
+  currentProject = name;
+  projectSelect.value = name;
+  document.title = `${name} \u2014 TalkShape`;
   viewerStatus.textContent = "No model loaded";
+  modelInfoBar.style.display = "none";
+  currentSTLFilename = null;
   if (currentMesh) {
     scene.remove(currentMesh);
     currentMesh.geometry.dispose();
@@ -601,9 +701,13 @@ projectSelect.addEventListener("change", () => {
   wireframePlaceholder.style.display = "block";
   wireframeTimestamp.style.display = "none";
   previewTimestamp = null;
+  // Clear chat and load session history
+  messagesEl.innerHTML = "";
+  loadSessionInfo();
+  loadSessionHistory();
   // Reload file list
   loadFileList();
-});
+}
 
 // ─── WebSocket: file watcher ─────────────────────────────────────────────────
 
@@ -666,9 +770,203 @@ async function checkHealth() {
   }
 }
 
+// ─── New Project modal ──────────────────────────────────────────────────────
+
+newProjectBtn.addEventListener("click", () => {
+  newProjectName.value = "";
+  newProjectError.style.display = "none";
+  newProjectModal.style.display = "flex";
+  newProjectName.focus();
+});
+
+newProjectClose.addEventListener("click", () => {
+  newProjectModal.style.display = "none";
+});
+
+newProjectModal.addEventListener("click", (e) => {
+  if (e.target === newProjectModal) newProjectModal.style.display = "none";
+});
+
+newProjectName.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    newProjectCreate.click();
+  }
+});
+
+newProjectCreate.addEventListener("click", async () => {
+  const name = newProjectName.value.trim();
+  if (!name) return;
+
+  newProjectError.style.display = "none";
+  try {
+    const res = await fetch("/api/projects", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      newProjectError.textContent = data.error || "Failed to create project";
+      newProjectError.style.display = "block";
+      return;
+    }
+    newProjectModal.style.display = "none";
+    await loadProjects();
+    switchProject(name);
+  } catch (err) {
+    newProjectError.textContent = err.message;
+    newProjectError.style.display = "block";
+  }
+});
+
+// ─── Delete project ─────────────────────────────────────────────────────────
+
+deleteProjectBtn.addEventListener("click", async () => {
+  if (!currentProject) return;
+  if (!confirm(`Delete project "${currentProject}"? It will be moved to .trash.`)) return;
+
+  try {
+    const res = await fetch(`/api/projects/${currentProject}`, { method: "DELETE" });
+    if (res.ok) {
+      await loadProjects();
+      if (projectSelect.options.length > 0) {
+        switchProject(projectSelect.value);
+      } else {
+        messagesEl.innerHTML = "";
+        sessionInfoEl.style.display = "none";
+      }
+    }
+  } catch (err) {
+    console.error("Failed to delete project:", err);
+  }
+});
+
+// ─── Session management ─────────────────────────────────────────────────────
+
+function formatTimeAgo(ts) {
+  const seconds = Math.floor((Date.now() - ts) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
+}
+
+async function loadSessionInfo() {
+  try {
+    const res = await fetch(`/api/projects/${currentProject}/history`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    if (data.messageCount > 0 && data.startedAt) {
+      sessionInfoEl.style.display = "flex";
+      const infoSpan = document.createElement("span");
+      infoSpan.textContent = `Conversation started ${formatTimeAgo(data.startedAt)} \u00b7 ${data.messageCount} messages`;
+
+      const newConvBtn = document.createElement("button");
+      newConvBtn.className = "new-conversation-btn";
+      newConvBtn.textContent = "New Conversation";
+      newConvBtn.addEventListener("click", async () => {
+        await fetch(`/api/projects/${currentProject}/session`, { method: "DELETE" });
+        messagesEl.innerHTML = "";
+        sessionInfoEl.style.display = "none";
+      });
+
+      sessionInfoEl.innerHTML = "";
+      sessionInfoEl.appendChild(infoSpan);
+      sessionInfoEl.appendChild(newConvBtn);
+    } else {
+      sessionInfoEl.style.display = "none";
+    }
+  } catch {
+    sessionInfoEl.style.display = "none";
+  }
+}
+
+async function loadSessionHistory() {
+  try {
+    const res = await fetch(`/api/projects/${currentProject}/history`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    for (const msg of data.history) {
+      if (msg.role === "user") {
+        addMessage("user", msg.text);
+      } else if (msg.role === "assistant") {
+        addMessage("assistant", msg.text);
+      }
+    }
+  } catch {
+    // No history available
+  }
+}
+
+// ─── Image upload ───────────────────────────────────────────────────────────
+
+uploadBtn.addEventListener("click", () => {
+  imageFileInput.click();
+});
+
+imageFileInput.addEventListener("change", () => {
+  const file = imageFileInput.files[0];
+  if (file) setImageUpload(file);
+  imageFileInput.value = "";
+});
+
+uploadRemove.addEventListener("click", () => {
+  clearImageUpload();
+});
+
+function setImageUpload(file) {
+  pendingImageFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    uploadThumb.src = e.target.result;
+    uploadPreview.style.display = "flex";
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImageUpload() {
+  pendingImageFile = null;
+  uploadPreview.style.display = "none";
+  uploadThumb.src = "";
+}
+
+// Clipboard paste for images
+chatInput.addEventListener("paste", (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.startsWith("image/")) {
+      e.preventDefault();
+      const file = item.getAsFile();
+      if (file) setImageUpload(file);
+      break;
+    }
+  }
+});
+
+// ─── Download All ───────────────────────────────────────────────────────────
+
+downloadAllBtn.addEventListener("click", () => {
+  if (!currentProject) return;
+  const link = document.createElement("a");
+  link.href = `/api/projects/${currentProject}/download`;
+  link.download = `${currentProject}.zip`;
+  link.click();
+});
+
 // ─── Init ────────────────────────────────────────────────────────────────────
 
-loadProjects().then(() => loadFileList());
+loadProjects().then(() => {
+  loadFileList();
+  loadSessionInfo();
+  loadSessionHistory();
+  document.title = `${currentProject} \u2014 TalkShape`;
+});
 connectWebSocket();
 checkHealth();
 chatInput.focus();

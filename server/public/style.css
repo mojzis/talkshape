@@ -20,6 +20,24 @@
   --ok: #44cc44;
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f5f5;
+    --bg-chat: #ffffff;
+    --bg-input: #e8e8e8;
+    --bg-user: #d4b8e8;
+    --bg-assistant: #f0f0f0;
+    --bg-header: #e0e0e0;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --accent: #1976d2;
+    --border: #ccc;
+    --err: #d32f2f;
+    --warn: #f57c00;
+    --ok: #388e3c;
+  }
+}
+
 html, body {
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -64,6 +82,25 @@ html, body {
   font-size: 0.85rem;
 }
 
+#new-project-btn,
+#delete-project-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+#new-project-btn:hover { color: var(--ok); border-color: var(--ok); }
+#delete-project-btn:hover { color: var(--err); border-color: var(--err); }
+
 /* Main layout — three columns */
 #app {
   display: grid;
@@ -102,6 +139,26 @@ html, body {
   border-bottom: 1px solid var(--border);
   background: var(--bg-header);
   white-space: nowrap;
+  gap: 0.4rem;
+}
+
+#file-browser-header span {
+  flex: 1;
+}
+
+#download-all-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+#download-all-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 #file-browser-toggle {
@@ -163,6 +220,26 @@ html, body {
   flex-shrink: 0;
 }
 
+.file-download-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.file-item:hover .file-download-btn {
+  opacity: 1;
+}
+
+.file-download-btn:hover {
+  color: var(--accent);
+}
+
 /* ─── Chat pane ─────────────────────────────────────────────────── */
 
 #chat-pane {
@@ -170,6 +247,32 @@ html, body {
   flex-direction: column;
   border-right: 1px solid var(--border);
   background: var(--bg-chat);
+}
+
+#session-info {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  padding: 0.4rem 1rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-header);
+}
+
+#session-info .new-conversation-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+#session-info .new-conversation-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 #messages {
@@ -364,10 +467,64 @@ html, body {
 /* Chat input */
 #chat-form {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
   padding: 0.75rem;
   border-top: 1px solid var(--border);
   background: var(--bg-input);
+  gap: 0.5rem;
+}
+
+#chat-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+#upload-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+#upload-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+#upload-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+#upload-thumb {
+  max-height: 60px;
+  max-width: 120px;
+  border-radius: 4px;
+  object-fit: contain;
+}
+
+#upload-remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 0.3rem;
+}
+
+#upload-remove:hover {
+  color: var(--err);
 }
 
 #chat-input {
@@ -475,6 +632,16 @@ html, body {
   pointer-events: none;
 }
 
+/* Model info bar */
+#model-info-bar {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 0.3rem 0.6rem;
+  background: rgba(0, 0, 0, 0.6);
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
 /* Wireframe preview */
 #wireframe-preview {
   flex: 4;
@@ -531,7 +698,7 @@ html, body {
   border-radius: 3px;
 }
 
-/* ─── File content modal ────────────────────────────────────────── */
+/* ─── Modals ───────────────────────────────────────────────────── */
 
 .modal-overlay {
   position: fixed;
@@ -557,6 +724,11 @@ html, body {
   flex-direction: column;
 }
 
+.modal-small {
+  width: 360px;
+  max-height: none;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -579,6 +751,59 @@ html, body {
 
 .modal-header button:hover {
   color: var(--text);
+}
+
+.modal-body-form {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.modal-body-form label {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.modal-body-form input[type="text"] {
+  background: var(--bg-chat);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.modal-body-form input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.modal-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.modal-error {
+  font-size: 0.78rem;
+  color: var(--err);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 0.3rem;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
 }
 
 #file-modal-body {
@@ -621,4 +846,34 @@ html, body {
   text-align: center;
   padding: 0.4rem;
   font-size: 0.82rem;
+}
+
+/* ─── Responsive layout ────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  #app {
+    grid-template-columns: 1fr 1fr;
+  }
+  #file-browser {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+  #file-browser {
+    display: none;
+  }
+  #chat-pane {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  #header {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 0.3rem;
+  }
 }
