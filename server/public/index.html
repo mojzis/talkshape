@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TalkShape</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><polygon points='50,10 90,30 90,70 50,90 10,70 10,30' fill='%234fc3f7' stroke='%231a1a2e' stroke-width='4'/><line x1='50' y1='10' x2='50' y2='90' stroke='%231a1a2e' stroke-width='2'/><line x1='10' y1='30' x2='90' y2='70' stroke='%231a1a2e' stroke-width='2'/><line x1='90' y1='30' x2='10' y2='70' stroke='%231a1a2e' stroke-width='2'/></svg>">
   <link rel="stylesheet" href="/style.css">
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <script type="importmap">
@@ -21,6 +22,8 @@
     <div id="project-selector">
       <label for="project-select">Project:</label>
       <select id="project-select"></select>
+      <button id="new-project-btn" title="Create new project">+</button>
+      <button id="delete-project-btn" title="Delete current project">&times;</button>
     </div>
   </header>
 
@@ -29,6 +32,7 @@
     <section id="file-browser">
       <div id="file-browser-header">
         <span>Files</span>
+        <button id="download-all-btn" title="Download all as ZIP">ZIP</button>
         <button id="file-browser-toggle" title="Collapse file browser">&lsaquo;</button>
       </div>
       <div id="file-list"></div>
@@ -36,15 +40,24 @@
 
     <!-- Chat pane -->
     <section id="chat-pane">
+      <div id="session-info" style="display:none"></div>
       <div id="messages"></div>
       <form id="chat-form">
-        <textarea
-          id="chat-input"
-          placeholder="Describe what you want to build..."
-          rows="2"
-        ></textarea>
-        <button type="submit" id="send-btn">Send</button>
+        <div id="upload-preview" style="display:none">
+          <img id="upload-thumb" alt="Upload preview">
+          <button type="button" id="upload-remove" title="Remove image">&times;</button>
+        </div>
+        <div id="chat-input-row">
+          <button type="button" id="upload-btn" title="Attach image">&#x1F4CE;</button>
+          <textarea
+            id="chat-input"
+            placeholder="Describe what you want to build..."
+            rows="2"
+          ></textarea>
+          <button type="submit" id="send-btn">Send</button>
+        </div>
       </form>
+      <input type="file" id="image-file-input" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp" style="display:none">
     </section>
 
     <!-- Preview pane (3D viewer + wireframe) -->
@@ -57,6 +70,7 @@
         </div>
         <div id="viewer-status">No model loaded</div>
       </div>
+      <div id="model-info-bar" style="display:none"></div>
       <div id="wireframe-preview">
         <div id="wireframe-header">Wireframe Preview</div>
         <div id="wireframe-content">
@@ -76,6 +90,23 @@
         <button id="file-modal-close">&times;</button>
       </div>
       <pre id="file-modal-body"></pre>
+    </div>
+  </div>
+
+  <!-- New Project modal -->
+  <div id="new-project-modal" class="modal-overlay" style="display:none">
+    <div class="modal-content modal-small">
+      <div class="modal-header">
+        <span>New Project</span>
+        <button id="new-project-close">&times;</button>
+      </div>
+      <div class="modal-body-form">
+        <label for="new-project-name">Project name</label>
+        <input type="text" id="new-project-name" placeholder="e.g. cookie-cutter" maxlength="50" autocomplete="off">
+        <p class="modal-hint">Lowercase letters, numbers, and hyphens only.</p>
+        <p id="new-project-error" class="modal-error" style="display:none"></p>
+        <button id="new-project-create" class="btn-primary">Create</button>
+      </div>
     </div>
   </div>
 

@@ -1,5 +1,7 @@
 # Phase 3 — Project Management, Multi-Turn Sessions, Polish
 
+**Status: IMPLEMENTED**
+
 **Prerequisite:** Phase 2 complete — chat, STL viewer, wireframe previews, file browser, validation display all working.
 
 **Goal:** Make it usable by the whole family without hand-holding. Multiple projects, persistent conversation history within a session, project creation from the browser, and rough edges smoothed.
