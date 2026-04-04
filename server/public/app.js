@@ -655,10 +655,10 @@ async function checkHealth() {
   try {
     const res = await fetch("/api/health");
     const data = await res.json();
-    if (!data.apiKeySet) {
+    if (data.status !== "ok") {
       const banner = document.createElement("div");
       banner.id = "health-banner";
-      banner.textContent = "Warning: ANTHROPIC_API_KEY is not set. Chat will not work.";
+      banner.textContent = "Warning: Server health check failed.";
       document.body.insertBefore(banner, document.getElementById("app"));
     }
   } catch {

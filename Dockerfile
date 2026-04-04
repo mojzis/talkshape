@@ -14,12 +14,14 @@ RUN pip3 install --break-system-packages \
     cairosvg \
     trimesh
 
-# Claude Code CLI (the Agent SDK spawns it internally)
-RUN npm install -g @anthropic-ai/claude-code
-
-# Non-root user
-RUN useradd -m -s /bin/bash claude
+# Non-root user (UID 1000 to match host user for mounted files like .credentials.json)
+RUN userdel -r node && useradd -m -s /bin/bash -u 1000 claude
 RUN mkdir -p /home/claude/.claude/skills && chown -R claude:claude /home/claude/.claude
+
+# Claude Code CLI (native binary, installed as claude user)
+USER claude
+RUN curl -fsSL https://claude.ai/install.sh | bash
+USER root
 
 # App directory
 WORKDIR /workspace
@@ -35,6 +37,7 @@ COPY server/ ./server/
 RUN mkdir -p /workspace/projects && chown -R claude:claude /workspace
 
 USER claude
+ENV PATH="/home/claude/.local/bin:$PATH"
 
 EXPOSE 3000
 

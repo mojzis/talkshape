@@ -54,7 +54,7 @@ app.get("/api/projects", async (req, res) => {
 // --- API: health check ---
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", apiKeySet: !!process.env.ANTHROPIC_API_KEY });
+  res.json({ status: "ok" });
 });
 
 // --- API: project files listing ---
