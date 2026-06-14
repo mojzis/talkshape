@@ -1,4 +1,4 @@
-FROM node:20-bookworm
+FROM node:26-bookworm
 
 # System packages required by OpenCASCADE (headless) and general tooling
 RUN apt-get update && apt-get install -y --no-install-recommends \
