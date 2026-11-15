@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 350 280" width="350" height="280">
+
+  <!-- Shell - spiral -->
+  <path d="M 200 80
+           C 260 80, 290 130, 280 180
+           C 270 230, 210 250, 160 230
+           C 110 210, 95 160, 115 120
+           C 135 80, 180 75, 210 100
+           C 240 125, 245 165, 225 190
+           C 205 215, 165 215, 145 195
+           C 125 175, 130 145, 155 135
+           C 180 125, 200 140, 200 160
+           C 200 180, 180 188, 168 180
+           C 156 172, 162 158, 175 158
+           C 185 158, 188 168, 182 175"
+        fill="none" stroke="#333" stroke-width="2.5"/>
+
+  <!-- Shell ridges/growth lines -->
+  <path d="M 230 100 C 250 115, 260 140, 255 165" fill="none" stroke="#333" stroke-width="1.5"/>
+  <path d="M 210 90 C 235 100, 252 125, 250 155" fill="none" stroke="#333" stroke-width="1.5"/>
+  <path d="M 185 88 C 215 92, 240 115, 242 150" fill="none" stroke="#333" stroke-width="1.5"/>
+
+  <!-- Body/foot -->
+  <path d="M 160 230
+           C 140 235, 100 240, 60 240
+           C 30 240, 15 235, 10 225
+           C 5 215, 15 205, 35 200
+           C 55 195, 90 195, 120 200
+           C 140 205, 155 215, 160 230"
+        fill="none" stroke="#333" stroke-width="2.5"/>
+
+  <!-- Body texture lines -->
+  <path d="M 50 210 C 55 220, 55 230, 50 238" fill="none" stroke="#333" stroke-width="1"/>
+  <path d="M 70 205 C 75 218, 75 232, 70 240" fill="none" stroke="#333" stroke-width="1"/>
+  <path d="M 90 202 C 95 215, 95 230, 92 240" fill="none" stroke="#333" stroke-width="1"/>
+  <path d="M 110 205 C 115 218, 115 232, 112 238" fill="none" stroke="#333" stroke-width="1"/>
+
+  <!-- Head -->
+  <ellipse cx="25" cy="215" rx="18" ry="15" fill="none" stroke="#333" stroke-width="2"/>
+
+  <!-- Eye stalks -->
+  <path d="M 20 205 C 15 185, 10 170, 8 155" fill="none" stroke="#333" stroke-width="2"/>
+  <path d="M 30 205 C 35 185, 42 170, 48 158" fill="none" stroke="#333" stroke-width="2"/>
+
+  <!-- Eyes -->
+  <circle cx="8" cy="152" r="6" fill="none" stroke="#333" stroke-width="2"/>
+  <circle cx="8" cy="152" r="3" fill="#333"/>
+  <circle cx="48" cy="155" r="6" fill="none" stroke="#333" stroke-width="2"/>
+  <circle cx="48" cy="155" r="3" fill="#333"/>
+
+  <!-- Tentacles (lower pair) -->
+  <path d="M 15 220 C 5 225, -5 222, -8 215" fill="none" stroke="#333" stroke-width="1.5"/>
+  <path d="M 18 225 C 10 232, 2 232, -2 228" fill="none" stroke="#333" stroke-width="1.5"/>
+
+  <!-- Mouth -->
+  <path d="M 12 222 C 15 225, 18 225, 20 222" fill="none" stroke="#333" stroke-width="1.5"/>
+
+  <!-- Slime trail -->
+  <path d="M 60 245 C 80 248, 120 250, 180 248 C 240 246, 300 250, 340 252"
+        fill="none" stroke="#333" stroke-width="1" stroke-dasharray="5,3"/>
+
+  <!-- Some bubbles in water suggestion -->
+  <circle cx="280 " cy="100" r="5" fill="none" stroke="#333" stroke-width="1"/>
+  <circle cx="295" cy="85" r="3" fill="none" stroke="#333" stroke-width="1"/>
+  <circle cx="305" cy="110" r="4" fill="none" stroke="#333" stroke-width="1"/>
+  <circle cx="320" cy="95" r="2" fill="none" stroke="#333" stroke-width="1"/>
+
+  <!-- Water ripple lines -->
+  <path d="M 5 260 C 25 255, 45 265, 65 260 C 85 255, 105 265, 125 260" fill="none" stroke="#333" stroke-width="1"/>
+  <path d="M 140 262 C 160 257, 180 267, 200 262 C 220 257, 240 267, 260 262" fill="none" stroke="#333" stroke-width="1"/>
+
+</svg>

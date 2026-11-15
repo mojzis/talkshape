@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="400" height="240">
+  <!-- Sparrow silhouette - side view -->
+  <defs>
+    <style>
+      .body { fill: #4a3728; }
+      .wing { fill: #5c4a3a; }
+      .eye { fill: #ffffff; }
+      .beak { fill: #d4a84b; }
+      .leg { fill: #c4956a; stroke: #c4956a; stroke-width: 2; }
+      .outline { fill: none; stroke: #2a1f18; stroke-width: 1; }
+    </style>
+  </defs>
+
+  <!-- Main body - elongated oval -->
+  <ellipse cx="100" cy="60" rx="45" ry="28" class="body"/>
+
+  <!-- Head - overlapping circle -->
+  <circle cx="145" cy="50" r="22" class="body"/>
+
+  <!-- Tail feathers - triangle pointing left -->
+  <polygon points="55,55 25,45 25,70 55,65" class="body"/>
+
+  <!-- Wing - overlapping ellipse with slight angle -->
+  <ellipse cx="95" cy="62" rx="30" ry="18" class="wing" transform="rotate(-5, 95, 62)"/>
+
+  <!-- Beak - triangle -->
+  <polygon points="167,48 185,52 167,56" class="beak"/>
+
+  <!-- Eye -->
+  <circle cx="152" cy="46" r="4" class="eye"/>
+  <circle cx="153" cy="45" r="2" fill="#1a1a1a"/>
+
+  <!-- Legs -->
+  <line x1="85" y1="88" x2="80" y2="110" class="leg"/>
+  <line x1="80" y1="110" x2="70" y2="115" class="leg"/>
+  <line x1="80" y1="110" x2="85" y2="115" class="leg"/>
+  <line x1="80" y1="110" x2="78" y2="118" class="leg"/>
+
+  <line x1="105" y1="88" x2="100" y2="110" class="leg"/>
+  <line x1="100" y1="110" x2="90" y2="115" class="leg"/>
+  <line x1="100" y1="110" x2="105" y2="115" class="leg"/>
+  <line x1="100" y1="110" x2="98" y2="118" class="leg"/>
+
+  <!-- Part labels for decomposition -->
+  <text x="100" y="130" font-size="8" fill="#666" text-anchor="middle">
+    Parts: Head (sphere) | Body (ellipsoid) | Tail (wedge) | Wing (ellipsoid) | Beak (cone) | Legs (cylinders)
+  </text>
+</svg>
